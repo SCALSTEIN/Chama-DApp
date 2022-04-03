@@ -48,7 +48,7 @@ contract Chama {
         // Epoch Unix time equivalence of 30 days
         // I converted 30 days to Epoch Unix time equivalence i.e 408000
         require(block.timestamp == members[_membersCount].registrationDate + 408000);
-        return(members[_membersCount].isActive);
+        return(members[_membersCount].isActive = false);
     }
 
     function renewSubscription(uint _membersCount) public payable {
