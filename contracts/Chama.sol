@@ -52,7 +52,7 @@ contract Chama {
     }
 
     function renewSubscription(uint _membersCount) public payable {
-        require(checkSubscriptionStatus(_membersCount));
+        require(!checkSubscriptionStatus(_membersCount));
         require(msg.value > 2 ether);
         members[_membersCount].isActive = true;
     }
