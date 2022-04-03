@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.4.17;
 
 contract Chama {
     // Chama Manager will be responsible for calling some functions like loan()
@@ -10,7 +10,7 @@ contract Chama {
     uint256 public premium;
 
     // called once the contract is deployed
-    constructor() {
+    function Chama() {
         chamaManager = msg.sender;
     }
 
@@ -18,7 +18,7 @@ contract Chama {
         uint256 memberID;
         // Registration equals monthly premium a member will be subscribing to
         uint256 premium;
-        address payable member;
+        address member;
         uint256 registrationDate;
         bool isActive;
         bool hasLoaned;
@@ -27,7 +27,7 @@ contract Chama {
 
     mapping(uint256 => Member) public members;
 
-    function joinChama() public payable returns (uint256 membersCount, uint256 registrationTime) {
+    function joinChama() public payable returns(uint)  {
         require(msg.value > 2 ether);
         premium = msg.value;
         uint256 registrationTime = block.timestamp;
@@ -36,12 +36,13 @@ contract Chama {
         members[membersCount] = Member(
             membersCount,
             premium,
-            payable(msg.sender),
+            msg.sender,
             registrationTime,
             true,
             false,
             false
         );
+         return(membersCount);
     }
 
     function checkSubscriptionStatus(uint _membersCount) view public returns(bool){
