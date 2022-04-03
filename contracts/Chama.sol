@@ -10,7 +10,7 @@ contract Chama {
     uint256 public premium;
 
     // called once the contract is deployed
-    function Chama() {
+    function Chama() public {
         chamaManager = msg.sender;
     }
 
@@ -45,7 +45,7 @@ contract Chama {
          return(membersCount);
     }
 
-    function checkSubscriptionStatus(uint _membersCount) view public returns(bool){
+    function checkSubscriptionStatus(uint _membersCount) public returns(bool){
         // Epoch Unix time equivalence of 30 days
         // I converted 30 days to Epoch Unix time equivalence i.e 408000
         require(block.timestamp == members[_membersCount].registrationDate + 408000);
