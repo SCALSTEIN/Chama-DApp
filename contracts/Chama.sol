@@ -29,6 +29,7 @@ contract Chama {
 
     function joinChama() public payable returns(uint)  {
         require(msg.value > 2 ether);
+        // At the moment I'm combinig everyone despite the premiums they're offering
         premium = msg.value;
         uint256 registrationTime = block.timestamp;
         membersCount++;
