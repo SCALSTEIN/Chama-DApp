@@ -145,4 +145,3 @@ contract ChamaFactory is Chama {
         return deployedChamas;
     }
 }
-
