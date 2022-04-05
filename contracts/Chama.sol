@@ -11,11 +11,14 @@ contract Chama {
     // Since I'm storing members in a mapping I need membersCount to keep track of the number of members
     uint256 public membersCount;
     uint256 chamaCount;
-    
+    uint256 requestCount;
+    uint256 public approversCount;
+    uint256 memberFundCount;
+
     struct Member {
         uint256 memberID;
         address member;
-        uint chamaID;
+        uint256 chamaID;
         uint256 registrationDate;
         bool isActive;
         bool hasLoaned;
@@ -27,6 +30,7 @@ contract Chama {
     mapping(uint256 => address) public membersToChama;
     // keeps track of the numbers of members of a specific chama
     mapping(address => uint256) chamaMembersCount;
+    mapping(address => bool) membApproved;
 
     Member[] public members;
 
@@ -40,23 +44,64 @@ contract Chama {
         uint256 creationDate;
         // disbusrement period will be the amount of time it take before funds are disbursed i.e 1 month or a week
         uint256 disbursementPeriod;
+        mapping(address => bool) memberPaidStatus;
+        address[] chamaMembers;
     }
+
+    // store details about request for loan or emergencyLoan
+    struct Request {
+        uint256 requestID;
+        string description;
+        uint256 amount;
+        address recipient;
+        uint256 chamaID;
+        uint256 memberNo;
+        bool complete;
+        uint256 approvalCount;
+        mapping(address => bool) memberHasApproved;
+    }
+
+    Request[] public requests;
+    // mapping will include chama members who need to approve
+    mapping(uint256 => address) public approversToChama;
+    //mapping(address => bool) public approvers;
 
     mapping(uint256 => ChamaDetails) chamas;
 
-    // The address that deploys this contract will be chamaManager1
-   
+    /**event NewLoanRequest(
+        uint256 approvCount,
+        string descr,
+        uint256 amt,
+        address loanee,
+        uint256 membID,
+        bool status
+    );
 
+    event NewChama(
+        uint256 chamaCount,
+        string name,
+        address chamAddress,
+        uint256 regFee,
+        uint256 premium,
+        uint256 target,
+        uint256 date,
+        uint256 _reemittancePeriod,
+        address[] chamMembers
+    ); */
+
+    // The address that deploys this contract will be chamaManager1
+    // Constructor
     function Chama(
         string _nam,
-        uint _registrationFee,
-        uint _premium,
-        uint _target,
-        uint _reemittancePeriod
-    ) public  {
+        uint256 _registrationFee,
+        uint256 _premium,
+        uint256 _target,
+        uint256 _reemittancePeriod
+    ) public {
         chamaCount++;
         chamaManager1 = msg.sender;
-        uint time = block.timestamp;
+        uint256 time = block.timestamp;
+        address[] memory membs;
         chamas[chamaCount] = ChamaDetails(
             chamaCount,
             _nam,
@@ -65,28 +110,44 @@ contract Chama {
             _premium,
             _target,
             time,
-            _reemittancePeriod
+            _reemittancePeriod,
+            membs
         );
         //return(chamaCount);
     }
 
-    function createRandomChama(string _name, uint registrationFee, uint premium, uint target, uint _reemittancePeriod) public payable returns(uint, address) {
+    // function to create a Chama
+    function createRandomChama(
+        string _name,
+        uint256 registrationFee,
+        uint256 premium,
+        uint256 target,
+        uint256 _reemittancePeriod
+    ) public payable returns (uint256, address) {
         // For one to be a chama Manager he or she must be willing to pay 3 ether
         require(msg.value >= 3 ether);
-        require(chamaManager2 == address(0) || chamaManager3 == address(0) || chamaManager4 == address(0));
+        require(
+            chamaManager2 == address(0) ||
+                chamaManager3 == address(0) ||
+                chamaManager4 == address(0)
+        );
         // chamaAdd will be the Chama Address which will be equal to ChamaManager's address
         address chamaAdd;
-        uint date;
-        // chamaManager address will be the 
-        if(chamaManager2 == address(0) || chamaManager3 == address(0) || chamaManager4 == address(0)){
+        uint256 date;
+        // chamaManager address will be the
+        if (
+            chamaManager2 == address(0) ||
+            chamaManager3 == address(0) ||
+            chamaManager4 == address(0)
+        ) {
             // assign to chamaManager2
             chamaManager2 = msg.sender;
             chamaAdd = chamaManager2;
-        } else if(chamaManager3 == address(0) || chamaManager4 == address(0)){
+        } else if (chamaManager3 == address(0) || chamaManager4 == address(0)) {
             // assign to chamaManager3
             chamaManager3 = msg.sender;
             chamaAdd = chamaManager3;
-        } else if(chamaManager4 == address(0)){
+        } else if (chamaManager4 == address(0)) {
             // assign to chamaManager4
             chamaManager4 = msg.sender;
             chamaAdd = chamaManager4;
@@ -96,6 +157,7 @@ contract Chama {
         }
         chamaCount++;
         date = block.timestamp;
+        address[] memory mbrs;
         chamas[chamaCount] = ChamaDetails(
             chamaCount,
             _name,
@@ -104,20 +166,37 @@ contract Chama {
             premium,
             target,
             date,
-            _reemittancePeriod
+            _reemittancePeriod,
+            mbrs
         );
-        return(chamaCount, chamaAdd);
-    }
+        /** emit NewChama(
+            chamaCount;
+            _name;
+            chamaAdd;
+            registrationFee;
+            premium;
+            target;
+            date;
+            _reemittancePeriod;
+            members;
+        ); */
 
+        return (chamaCount, chamaAdd);
+    }
 
     // chamaAddress will be the address of the chama's manager
     // in the front end application we'll have a list of available chamas with the addresses of their respective managers
-    function joinChama(address chamaAddre, uint chamaCt ) public payable returns (uint256) {
+    // function to join Chama
+    function joinChama(address chamaAddre, uint256 chamaCt)
+        public
+        payable
+        returns (uint256)
+    {
         require(
             chamaAddre == chamaManager1 ||
-            chamaAddre == chamaManager2 ||
-            chamaAddre == chamaManager3 ||
-            chamaAddre == chamaManager4
+                chamaAddre == chamaManager2 ||
+                chamaAddre == chamaManager3 ||
+                chamaAddre == chamaManager4
         );
         require(chamaMembersCount[chamaAddre] <= 12);
         require(msg.value >= chamas[chamaCt].registrationFee);
@@ -137,11 +216,34 @@ contract Chama {
             )
         ) - 1;
         membersToChama[id] = chamaAddre;
+        approversToChama[id] = chamaAddre;
         //chamaMembersCount[chamaAddre] = chamaMembersCount[chamaAddre].add(1);
         chamaMembersCount[chamaAddre] = membersCount;
-        return (membersCount);
+        chamas[chamaCt].chamaMembers.push(msg.sender);
+        return (id);
     }
 
+    /**function listChamaMembersAddresses(uint256 _chamsID) public view returns(address) {
+        // expect to return the members addresses made with the loan requests details
+        return (address(chamas[_chamsID].chamaMembers));
+    } */
+
+    // function to disburse
+    // Using useEffect will keep on calling this function to keep track of time and make sure it
+    function disburseFunds(uint256 _chamID, address _membReceiving) public {
+        require(block.timestamp == chamas[_chamID].creationDate + 408000);
+        require(chamas[_chamID].memberPaidStatus[_membReceiving] == false);
+        memberFundCount++;
+        members[memberFundCount].member.transfer(
+            (chamas[_chamID].chamaManager.balance * 50) / 100
+        );
+        chamas[_chamID].memberPaidStatus[_membReceiving] = true;
+        if (memberFundCount > 12) {
+            memberFundCount = 0;
+        }
+    }
+
+    // function to check subscription status
     function checkSubscriptionStatus(uint256 _membersCount)
         public
         returns (bool)
@@ -153,20 +255,89 @@ contract Chama {
         // Need to add logic to check if he or she has paid
         //require(renewSubscription(_membersCount) == false);
         bool expired;
-        if(block.timestamp == members[_membersCount].registrationDate + 408000){
+        if (
+            block.timestamp == members[_membersCount].registrationDate + 408000
+        ) {
             expired = true;
-            return(expired);
-        } else{
+            return (expired);
+        } else {
             expired = false;
-            return(expired);
+            return (expired);
         }
     }
 
+    // function to renew Subscription
     function renewSubscription(uint256 _membersCount) public payable {
         require(checkSubscriptionStatus(_membersCount) == false);
-        uint chama = members[_membersCount].chamaID;
+        uint256 chama = members[_membersCount].chamaID;
         require(msg.value >= chamas[chama].premium);
         members[_membersCount].registrationDate = block.timestamp;
         members[_membersCount].isActive = true;
+    }
+
+    // decisions as to whether to award loans to members will be based on a consensus made by every chama member
+    // function to create a Loan request
+    function createLoanRequest(
+        string _description,
+        uint256 _amount,
+        uint256 _memberNo,
+        uint256 _chmID
+    ) public {
+        address recipient = msg.sender;
+        uint256 approvalCount;
+        bool requestStatus = false;
+        requests.push(
+            Request(
+                approvalCount,
+                _description,
+                _amount,
+                recipient,
+                _chmID,
+                _memberNo,
+                requestStatus,
+                membApproved[msg.sender] = true
+            )
+        );
+        /** emit NewLoanRequest(
+            approvalCount,
+            _description,
+            _amount,
+            recipient,
+            _memberNo,
+            requestStatus
+        ); */
+    }
+
+    // function returns a list of loan requests
+    function listOfLoanRequests() internal view returns (Request[]) {
+        // expect to return the several requests made with the loan requests details
+        return (requests);
+    }
+
+    // function that Chama members will call to approve loan requests
+    function approveLoanRequest(
+        uint256 _requestID,
+        uint256 _loaneeID,
+        uint256 _approverID
+    ) public {
+        //uint256 loaneeNumber = requests[_requestID].memberNo;
+        //require(members[loaneeNumber].chamaID)
+        require(approversToChama[_loaneeID] == approversToChama[_approverID]);
+        require(!requests[_requestID].memberHasApproved[msg.sender]);
+        requests[_requestID].approvalCount++;
+        requests[_requestID].memberHasApproved[msg.sender] = true;
+    }
+
+    // function to award loan based on consensus arrived by every member
+    function awardLoanRequest(uint256 _requestID) public {
+        // In order to award loan, decision is influenced by chama members
+        require(requests[_requestID].approvalCount >= 6);
+        require(!requests[_requestID].complete);
+        //chamas[chamaID].chamaManager.transfer()
+        requests[_requestID].recipient.transfer(
+            ((chamas[requests[_requestID].chamaID].chamaManager.balance * 5) /
+                100)
+        );
+        requests[_requestID].complete = true;
     }
 }
