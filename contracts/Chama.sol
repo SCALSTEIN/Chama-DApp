@@ -89,7 +89,7 @@ contract Chama {
         uint256 date,
         uint256 _reemittancePeriod,
         address[] chamMembers
-    ); 
+    );
 
     // The address that deploys this contract will be chamaManager1
     // Constructor
@@ -181,7 +181,7 @@ contract Chama {
             date,
             _reemittancePeriod,
             mbrs
-        ); 
+        );
 
         return (chamaCount, chamaAdd);
     }
@@ -225,10 +225,10 @@ contract Chama {
         return (id);
     }
 
-    /**function listChamaMembersAddresses(uint256 _chamsID) public view returns(address) {
+    /** function listOfChamaDetails(uint256 _chamsID) public view returns(ChamaDetails[]) {
         // expect to return the members addresses made with the loan requests details
-        return (address(chamas[_chamsID].chamaMembers));
-    } */
+        return (chamas[_chamsID]);
+    }  */
 
     // function to disburse
     // Using useEffect will keep on calling this function to keep track of time and make sure it
@@ -248,6 +248,7 @@ contract Chama {
     // function to check subscription status
     function checkSubscriptionStatus(uint256 _membersCount)
         public
+        view
         returns (bool)
     {
         // Epoch Unix time equivalence of 30 days
@@ -308,7 +309,7 @@ contract Chama {
             recipient,
             _memberNo,
             requestStatus
-        ); 
+        );
     }
 
     // function returns a list of loan requests
