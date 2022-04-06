@@ -2,7 +2,7 @@
 pragma solidity ^0.4.17;
 
 contract Chama {
-    // Chama Managers will be required to create chamas and will be responsible for disbursing funds for emergency and loans
+    // Chama Managers will be required to create chamas and will be responsible for disbursing dividends for emergency and loans
     // To be a chama Manager you'll have to a minimum of 3eth
     address public chamaManager1;
     address public chamaManager2;
@@ -10,10 +10,10 @@ contract Chama {
     address public chamaManager4;
     // Since I'm storing members in a mapping I need membersCount to keep track of the number of members
     uint256 public membersCount;
-    uint256 chamaCount;
-    uint256 requestCount;
+    uint256 public chamaCount;
+    uint256 public requestCount;
     uint256 public approversCount;
-    uint256 memberFundCount;
+    uint256 public memberFundCount;
 
     struct Member {
         uint256 memberID;
@@ -30,6 +30,7 @@ contract Chama {
     mapping(uint256 => address) public membersToChama;
     // keeps track of the numbers of members of a specific chama
     mapping(address => uint256) chamaMembersCount;
+    // membApproved is used to keep track of the members who have approved a loan request so that a member doesn't approve more than once
     mapping(address => bool) membApproved;
 
     Member[] public members;
@@ -230,7 +231,7 @@ contract Chama {
 
     // function to disburse
     // Using useEffect will keep on calling this function to keep track of time and make sure it
-    function disburseFunds(uint256 _chamID, address _membReceiving) public {
+    function disburseDividends(uint256 _chamID, address _membReceiving) public {
         require(block.timestamp == chamas[_chamID].creationDate + 408000);
         require(chamas[_chamID].memberPaidStatus[_membReceiving] == false);
         memberFundCount++;
