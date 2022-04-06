@@ -68,7 +68,7 @@ contract Chama {
 
     mapping(uint256 => ChamaDetails) chamas;
 
-    /**event NewLoanRequest(
+    event NewLoanRequest(
         uint256 approvCount,
         string descr,
         uint256 amt,
@@ -87,7 +87,7 @@ contract Chama {
         uint256 date,
         uint256 _reemittancePeriod,
         address[] chamMembers
-    ); */
+    ); 
 
     // The address that deploys this contract will be chamaManager1
     // Constructor
@@ -153,7 +153,7 @@ contract Chama {
             chamaAdd = chamaManager4;
         } else {
             // stop creating a random chama
-            return;
+            revert("Stop creating the chama!");
         }
         chamaCount++;
         date = block.timestamp;
@@ -169,7 +169,7 @@ contract Chama {
             _reemittancePeriod,
             mbrs
         );
-        /** emit NewChama(
+        emit NewChama(
             chamaCount;
             _name;
             chamaAdd;
@@ -179,7 +179,7 @@ contract Chama {
             date;
             _reemittancePeriod;
             members;
-        ); */
+        ); 
 
         return (chamaCount, chamaAdd);
     }
@@ -298,14 +298,14 @@ contract Chama {
                 membApproved[msg.sender] = true
             )
         );
-        /** emit NewLoanRequest(
+        emit NewLoanRequest(
             approvalCount,
             _description,
             _amount,
             recipient,
             _memberNo,
             requestStatus
-        ); */
+        ); 
     }
 
     // function returns a list of loan requests
