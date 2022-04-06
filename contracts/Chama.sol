@@ -21,6 +21,7 @@ contract Chama {
     uint256 public approversCount;
     uint256 public memberFundCount;
     uint256 public loanRequestCount;
+    uint256 public membersToApproveCount = 1;
 
     struct Member {
         uint256 memberID;
@@ -71,7 +72,10 @@ contract Chama {
 
     Request[] public requests;
     // mapping will include chama members who need to approve
-    mapping(uint256 => address) public approversToChama;
+    mapping(uint256 => address) public approversToChama1;
+    mapping(uint256 => address) public approversToChama2;
+    mapping(uint256 => address) public approversToChama3;
+    mapping(uint256 => address) public approversToChama4;
     //mapping(address => bool) public approvers;
 
     mapping(uint256 => ChamaDetails)  chamas;
@@ -224,7 +228,6 @@ contract Chama {
             )
         ) - 1;
         membersToChama[id] = chamaAddre;
-        approversToChama[id] = chamaAddre;
         //chamaMembersCount[chamaAddre] = chamaMembersCount[chamaAddre].add(1);
         chamaMembersCount[chamaAddre] = membersCount;
         chamas[chamaCt].chamaMembers.push(msg.sender);
@@ -309,6 +312,24 @@ contract Chama {
                 approvalCount
             )
         );
+        for(uint256 i=0; i<chamas[_chmID].chamaMembers.length; i++){
+            if(_chmID == 1){
+                approversToChama1[membersToApproveCount] = chamas[_chmID].chamaMembers[i];
+                membersToApproveCount++;
+            } else if(_chmID == 2){
+                approversToChama2[membersToApproveCount] = chamas[_chmID].chamaMembers[i];
+                membersToApproveCount++;
+            } else if(_chmID == 3){
+                approversToChama3[membersToApproveCount] = chamas[_chmID].chamaMembers[i];
+                membersToApproveCount++;
+            } else if(_chmID == 4){
+                approversToChama4[membersToApproveCount] = chamas[_chmID].chamaMembers[i];
+                membersToApproveCount++;
+            } else {
+                revert("Chama with that ID does not exist!");
+            }
+           
+        }
         emit NewLoanRequest(
             approvalCount,
             _description,
@@ -328,12 +349,22 @@ contract Chama {
     // function that Chama members will call to approve loan requests
     function approveLoanRequest(
         uint256 _requestID,
-        uint256 _loaneeID,
-        uint256 _approverID
+        uint256 _approverID,
+        uint256 _chamsId
     ) public {
         //uint256 loaneeNumber = requests[_requestID].memberNo;
         //require(members[loaneeNumber].chamaID)
-        require(approversToChama[_loaneeID] == approversToChama[_approverID]);
+        if(_chamsId == 1){
+            require(approversToChama1[_approverID] == msg.sender);
+        } else if(_chamsId == 2){
+            require(approversToChama2[_approverID] == msg.sender);
+        } else if(_chamsId == 3){
+            require(approversToChama3[_approverID] == msg.sender);
+        } else if(_chamsId == 4){
+            require(approversToChama4[_approverID] == msg.sender);
+        }
+        // there may be many loan requests someone may argue
+        // but at the moment our rule is we can only administer one loan at a time
         require(!membHasAlreadyApproved[msg.sender]);
         requests[_requestID].approvalCount++;
         membHasAlreadyApproved[msg.sender] = true;
@@ -350,5 +381,7 @@ contract Chama {
                 100)
         );
         requests[_requestID].complete = true;
+        // I want to set the membHasAlreadyApproved mapping with address as its key and value as a boolean field to the default mapping value
+        //for(uint256 i=0; i<)
     }
 }
