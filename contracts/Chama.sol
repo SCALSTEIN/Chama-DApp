@@ -32,6 +32,8 @@ contract Chama {
     mapping(address => uint256) chamaMembersCount;
     // membApproved is used to keep track of the members who have approved a loan request so that a member doesn't approve more than once
     mapping(address => bool) membApproved;
+    // memberPaidStatus is meant to keep track the payment status of chama members
+    mapping(address => bool) memberPaidStatus;
 
     Member[] public members;
 
@@ -45,7 +47,6 @@ contract Chama {
         uint256 creationDate;
         // disbusrement period will be the amount of time it take before funds are disbursed i.e 1 month or a week
         uint256 disbursementPeriod;
-        mapping(address => bool) memberPaidStatus;
         address[] chamaMembers;
     }
 
@@ -59,7 +60,6 @@ contract Chama {
         uint256 memberNo;
         bool complete;
         uint256 approvalCount;
-        mapping(address => bool) memberHasApproved;
     }
 
     Request[] public requests;
@@ -295,10 +295,10 @@ contract Chama {
                 recipient,
                 _chmID,
                 _memberNo,
-                requestStatus,
-                membApproved[msg.sender] = true
+                requestStatus
             )
         );
+        membApproved[msg.sender] = true
         emit NewLoanRequest(
             approvalCount,
             _description,
