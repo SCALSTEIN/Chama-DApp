@@ -2,7 +2,11 @@ const { assert } = require("console");
 
 const Chama = artifacts.require("Chama");
 contract("Chama", () => {
-  it("should create a manager with an address of the account that deployed the contract", () => {
+
+  describe("Chama DApp", function(){
+
+  })
+  it("Should track the first chama details created upon contract deployment", () => {
     Chama.deployed()
       .then((instance) => instance.chamaManager())
       .then((manager) => {

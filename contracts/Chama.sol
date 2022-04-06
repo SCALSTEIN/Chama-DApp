@@ -16,6 +16,7 @@ contract Chama {
     address public chamaManager4;
     // Since I'm storing members in a mapping I need membersCount to keep track of the number of members
     uint256 public membersCount;
+    uint256 public loanCount;
     uint256 public chamaCount;
     uint256 public requestCount;
     uint256 public approversCount;
@@ -31,7 +32,7 @@ contract Chama {
         bool isActive;
         bool hasLoaned;
         bool hasEmergency;
-        bool hasPaid;
+        bool hasBeenPaid;
     }
 
     // keeps track of the members of a specific chama
@@ -56,6 +57,7 @@ contract Chama {
         // disbusrement period will be the amount of time it take before funds are disbursed i.e 1 month or a week
         uint256 disbursementPeriod;
         address[] chamaMembers;
+        uint256 endDate;
     }
 
     // store details about request for loan or emergencyLoan
@@ -69,8 +71,19 @@ contract Chama {
         bool complete;
         uint256 approvalCount;
     }
+    struct Loan {
+        uint256 loanID;
+        uint256 memberID;
+        uint256 chamaID;
+        address loaneeAddress;
+        uint256 amount;
+        uint256 dayAwarded;
+        uint256 dueDate;
+        bool hasBeenPaid;
+    }
 
     Request[] public requests;
+    Loan[] public loans;
     // mapping will include chama members who need to approve
     mapping(uint256 => address) public approversToChama1;
     mapping(uint256 => address) public approversToChama2;
@@ -114,6 +127,7 @@ contract Chama {
         chamaManager1 = msg.sender;
         uint256 time = block.timestamp;
         address[] memory membs;
+        // 4896000 is Epoch Unix time equivalence of a year
         chamas[chamaCount] = ChamaDetails(
             chamaCount,
             _nam,
@@ -123,7 +137,8 @@ contract Chama {
             _target,
             time,
             _reemittancePeriod,
-            membs
+            membs,
+            4896000
         );
         //return(chamaCount);
     }
@@ -179,7 +194,8 @@ contract Chama {
             target,
             date,
             _reemittancePeriod,
-            mbrs
+            mbrs,
+            4896000
         );
         emit NewChama(
             chamaCount,
@@ -224,7 +240,7 @@ contract Chama {
                 true,
                 false,
                 false,
-                true
+                false
             )
         ) - 1;
         membersToChama[id] = chamaAddre;
@@ -242,13 +258,14 @@ contract Chama {
     // function to disburse
     // Using useEffect will keep on calling this function to keep track of time and make sure it
     function disburseDividends(uint256 _chamID, address _membReceiving) public {
-        require(block.timestamp == chamas[_chamID].creationDate + 408000);
+        require(block.timestamp >= chamas[_chamID].creationDate + 408000);
         require(memberPaidStatus[_membReceiving] == false);
         memberFundCount++;
         members[memberFundCount].member.transfer(
             (chamas[_chamID].chamaManager.balance * 50) / 100
         );
         chamas[_chamID].creationDate = block.timestamp;
+        members[memberFundCount].hasBeenPaid = true;
         memberPaidStatus[_membReceiving] = true;
         if (memberFundCount > 12) {
             memberFundCount = 0;
@@ -371,8 +388,11 @@ contract Chama {
     }
 
     // function to award loan based on consensus arrived by every member
+    // useEffect hook which is dispatched whenever there is change in state
     function awardLoanRequest(uint256 _requestID) public {
         // In order to award loan, decision is influenced by chama members
+        uint256 memId = requests[_requestID].memberNo;
+        require(members[memId].isActive);
         require(requests[_requestID].approvalCount >= 6);
         require(!requests[_requestID].complete);
         //chamas[chamaID].chamaManager.transfer()
@@ -381,7 +401,51 @@ contract Chama {
                 100)
         );
         requests[_requestID].complete = true;
+        uint256 timeAwarded = block.timestamp;
+        uint256 loanDueDate = timeAwarded + 408000;
+        address manager = chamas[requests[_requestID].chamaID].chamaManager;
+        address loaneeAdd = members[memId].member;
+        loanCount++;
+        loans[loanCount] = Loan(loanCount,memId,requests[_requestID].chamaID,loaneeAdd,(manager.balance * 5) /
+                100,timeAwarded,loanDueDate,false);
         // I want to set the membHasAlreadyApproved mapping with address as its key and value as a boolean field to the default mapping value
         //for(uint256 i=0; i<)
+    }
+
+    function payLoanAwarded(uint _loanId) public payable returns(bool) {
+        require(!loans[_loanId].hasBeenPaid);
+        uint256 dueTime = loans[_loanId].dueDate;
+        uint256 blockTime = block.timestamp;
+        uint256 loanPayAmt = loans[_loanId].amount;
+        uint256 loanAmt;
+        uint256 mbID = loans[_loanId].memberID;
+        // If you don't pay within the two months time frame your account is inactivated
+        if(blockTime <= dueTime){
+            require(msg.value >= loanPayAmt);
+            return loans[_loanId].hasBeenPaid = true;
+        } else if(blockTime > dueTime){
+            if(blockTime >= dueTime + 408000){
+                loanAmt = (loanPayAmt*102)/100;
+                require(msg.value >= loanAmt);
+                return loans[_loanId].hasBeenPaid = true;
+            } else if(blockTime >= dueTime + 816000){
+                loanAmt = (loanPayAmt*104)/100;
+                require(msg.value >= loanAmt);
+                return loans[_loanId].hasBeenPaid = true;
+            }else{
+                members[mbID].isActive = false;
+                return loans[_loanId].hasBeenPaid = false;
+            }
+        }
+        
+    }
+    // Chama ends at the indicated date, once you join the Chama you can't leave until the end date reaches
+    function endChama() public {
+        // give one day for dividends to be sent to the last person and then they get dividends then the group is deleted
+        for(uint256 i=1;i<=chamaCount;i++){
+            if(block.timestamp >= chamas[i].endDate + 86400){
+                delete chamas[i];
+            }
+        }
     }
 }
