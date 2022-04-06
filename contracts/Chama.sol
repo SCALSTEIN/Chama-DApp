@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.25;
 
 contract Chama {
     // Chama Managers will be required to create chamas and will be responsible for disbursing dividends for emergency and loans
@@ -14,6 +14,7 @@ contract Chama {
     uint256 public requestCount;
     uint256 public approversCount;
     uint256 public memberFundCount;
+    uint256 public loanRequestCount;
 
     struct Member {
         uint256 memberID;
@@ -31,7 +32,7 @@ contract Chama {
     // keeps track of the numbers of members of a specific chama
     mapping(address => uint256) chamaMembersCount;
     // membApproved is used to keep track of the members who have approved a loan request so that a member doesn't approve more than once
-    mapping(address => bool) membApproved;
+    mapping(address => bool) membHasAlreadyApproved;
     // memberPaidStatus is meant to keep track the payment status of chama members
     mapping(address => bool) memberPaidStatus;
 
@@ -92,7 +93,7 @@ contract Chama {
 
     // The address that deploys this contract will be chamaManager1
     // Constructor
-    function Chama(
+    constructor(
         string _nam,
         uint256 _registrationFee,
         uint256 _premium,
@@ -171,15 +172,15 @@ contract Chama {
             mbrs
         );
         emit NewChama(
-            chamaCount;
-            _name;
-            chamaAdd;
-            registrationFee;
-            premium;
-            target;
-            date;
-            _reemittancePeriod;
-            members;
+            chamaCount,
+            _name,
+            chamaAdd,
+            registrationFee,
+            premium,
+            target,
+            date,
+            _reemittancePeriod,
+            mbrs
         ); 
 
         return (chamaCount, chamaAdd);
@@ -233,12 +234,12 @@ contract Chama {
     // Using useEffect will keep on calling this function to keep track of time and make sure it
     function disburseDividends(uint256 _chamID, address _membReceiving) public {
         require(block.timestamp == chamas[_chamID].creationDate + 408000);
-        require(chamas[_chamID].memberPaidStatus[_membReceiving] == false);
+        require(memberPaidStatus[_membReceiving] == false);
         memberFundCount++;
         members[memberFundCount].member.transfer(
             (chamas[_chamID].chamaManager.balance * 50) / 100
         );
-        chamas[_chamID].memberPaidStatus[_membReceiving] = true;
+        memberPaidStatus[_membReceiving] = true;
         if (memberFundCount > 12) {
             memberFundCount = 0;
         }
@@ -287,18 +288,19 @@ contract Chama {
         address recipient = msg.sender;
         uint256 approvalCount;
         bool requestStatus = false;
+        loanRequestCount++;
         requests.push(
             Request(
-                approvalCount,
+                loanRequestCount,
                 _description,
                 _amount,
                 recipient,
                 _chmID,
                 _memberNo,
-                requestStatus
+                requestStatus,
+                approvalCount
             )
         );
-        membApproved[msg.sender] = true
         emit NewLoanRequest(
             approvalCount,
             _description,
@@ -324,9 +326,9 @@ contract Chama {
         //uint256 loaneeNumber = requests[_requestID].memberNo;
         //require(members[loaneeNumber].chamaID)
         require(approversToChama[_loaneeID] == approversToChama[_approverID]);
-        require(!requests[_requestID].memberHasApproved[msg.sender]);
+        require(!membHasAlreadyApproved[msg.sender]);
         requests[_requestID].approvalCount++;
-        requests[_requestID].memberHasApproved[msg.sender] = true;
+        membHasAlreadyApproved[msg.sender] = true;
     }
 
     // function to award loan based on consensus arrived by every member
