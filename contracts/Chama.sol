@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.4.25;
 
+/**
+* @title Chama
+* @dev Blockchain Chama System
+* This simplifies the implementation of "Women Chamas ".
+*/
+
 contract Chama {
     // Chama Managers will be required to create chamas and will be responsible for disbursing dividends for emergency and loans
     // To be a chama Manager you'll have to a minimum of 3eth
@@ -68,7 +74,7 @@ contract Chama {
     mapping(uint256 => address) public approversToChama;
     //mapping(address => bool) public approvers;
 
-    mapping(uint256 => ChamaDetails) chamas;
+    mapping(uint256 => ChamaDetails)  chamas;
 
     event NewLoanRequest(
         uint256 approvCount,
@@ -239,6 +245,7 @@ contract Chama {
         members[memberFundCount].member.transfer(
             (chamas[_chamID].chamaManager.balance * 50) / 100
         );
+        chamas[_chamID].creationDate = block.timestamp;
         memberPaidStatus[_membReceiving] = true;
         if (memberFundCount > 12) {
             memberFundCount = 0;
