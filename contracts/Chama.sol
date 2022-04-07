@@ -111,7 +111,8 @@ contract Chama {
         uint256 target,
         uint256 date,
         uint256 _reemittancePeriod,
-        address[] chamMembers
+        address[] chamMembers,
+        uint256 chamsEndDate
     );
 
     // The address that deploys this contract will be chamaManager1
@@ -185,6 +186,7 @@ contract Chama {
         chamaCount++;
         date = block.timestamp;
         address[] memory mbrs;
+        uint256 endingDate = 4896000;
         chamas[chamaCount] = ChamaDetails(
             chamaCount,
             _name,
@@ -195,7 +197,7 @@ contract Chama {
             date,
             _reemittancePeriod,
             mbrs,
-            4896000
+            endingDate
         );
         emit NewChama(
             chamaCount,
@@ -206,7 +208,8 @@ contract Chama {
             target,
             date,
             _reemittancePeriod,
-            mbrs
+            mbrs,
+            endingDate
         );
 
         return (chamaCount, chamaAdd);
@@ -389,6 +392,7 @@ contract Chama {
 
     // function to award loan based on consensus arrived by every member
     // useEffect hook which is dispatched whenever there is change in state
+    // At the moment the contract process a Chama at a time, can't process concurrent requests
     function awardLoanRequest(uint256 _requestID) public {
         // In order to award loan, decision is influenced by chama members
         uint256 memId = requests[_requestID].memberNo;
@@ -408,8 +412,9 @@ contract Chama {
         loanCount++;
         loans[loanCount] = Loan(loanCount,memId,requests[_requestID].chamaID,loaneeAdd,(manager.balance * 5) /
                 100,timeAwarded,loanDueDate,false);
+        members[memId].hasLoaned = true;
         // I want to set the membHasAlreadyApproved mapping with address as its key and value as a boolean field to the default mapping value
-        //for(uint256 i=0; i<)
+        //delete membHasAlreadyApproved;
     }
 
     function payLoanAwarded(uint _loanId) public payable returns(bool) {
