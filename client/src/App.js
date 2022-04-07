@@ -1,7 +1,14 @@
 import React, { Component } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ChamaContract from "./contracts/Chama.json";
 import getWeb3 from "./getWeb3";
 import "./App.css";
+import Navigation from "./components/Navbar";
+import Home from "./components/Home";
+import CreateChama from "./components/CreateChama";
+import AvailableChamas from "./components/AvailableChamas";
+import Account from "./components/Account";
+import { Spinner } from "react-bootstrap";
 
 class App extends Component {
   state = { storageValue: 0, web3: null, accounts: null, contract: null };
@@ -24,7 +31,7 @@ class App extends Component {
 
       // Set web3, accounts, and contract to the state, and then proceed with an
       // example of interacting with the contract's methods.
-      this.setState({ web3, accounts, contract: instance }, this.runExample);
+      this.setState({ web3, accounts, contract: instance });
     } catch (error) {
       // Catch any errors for any of the above operations.
       alert(
@@ -34,7 +41,10 @@ class App extends Component {
     }
   };
 
-  runExample = async () => {
+ 
+
+  /** 
+   *  runExample = async () => {
     const { accounts, contract } = this.state;
 
     // Stores a given value, 5 by default.
@@ -46,9 +56,7 @@ class App extends Component {
     // Update state with the result.
     //this.setState({ storageValue: response });
   };
-
-  render() {
-    if (!this.state.web3) {
+   * if (!this.state.web3) {
       return <div>Loading Web3, accounts, and contract...</div>;
     }
     return (
@@ -65,7 +73,57 @@ class App extends Component {
         </p>
         <div>The stored value is: {this.state.storageValue}</div>
       </div>
-    );
+    ); */
+
+  render() {
+    return(
+      <BrowserRouter>
+      <div className="App">
+        <>
+          <Navigation />
+        </>
+        <div>
+          {this.state.web3 ? (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                minHeight: "80vh",
+              }}
+            >
+              <Spinner animation="border" style={{ display: "flex" }} />
+              <p className="mx-3 my-0">Loading Web3, accounts, and contract...</p>
+            </div>
+          ) : (
+            <Routes>
+              <Route
+                path="/"
+                element={<Home />}
+              />
+              <Route
+                path="/create-chama"
+                element={<CreateChama />}
+              />
+              <Route
+                path="/chamas"
+                element={
+                  <AvailableChamas />
+                }
+              />
+              <Route
+                path="/account"
+                element={
+                  <Account />
+                }
+              />
+            </Routes>
+          )}
+        </div>
+      </div>
+    </BrowserRouter>
+    )
+   
   }
 }
 
