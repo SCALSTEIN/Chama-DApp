@@ -6,7 +6,7 @@ const Navigation = () => {
   return (
     <Navbar expand="lg" bg="secondary" variant="dark">
       <Container>
-        <Navbar.Brand href="#">Mwanamke Bomba</Navbar.Brand>
+        <Navbar.Brand href="#">Inua Wanadada</Navbar.Brand>
         <Navbar.Toggle aria-controls="responsive-navbar-nav" />
         <Navbar.Collapse id="responsive-navbar-nav">
           <Nav className="me-auto">

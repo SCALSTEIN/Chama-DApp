@@ -2,10 +2,10 @@
 pragma solidity ^0.4.25;
 
 /**
-* @title Chama
-* @dev Blockchain Chama System
-* This simplifies the implementation of "Women Chamas ".
-*/
+ * @title Chama
+ * @dev Blockchain Chama System
+ * This simplifies the implementation of "Women Chamas ".
+ */
 
 contract Chama {
     // Chama Managers will be required to create chamas and will be responsible for disbursing dividends for emergency and loans
@@ -91,7 +91,7 @@ contract Chama {
     mapping(uint256 => address) public approversToChama4;
     //mapping(address => bool) public approvers;
 
-    mapping(uint256 => ChamaDetails)  chamas;
+    mapping(uint256 => ChamaDetails) chamas;
 
     event NewLoanRequest(
         uint256 approvCount,
@@ -117,11 +117,11 @@ contract Chama {
 
     // The address that deploys this contract will be chamaManager1
     // Constructor
-    constructor(
+    /** constructor(
         string _nam,
-        uint256 _registrationFee,
-        uint256 _premium,
-        uint256 _target,
+        string _registrationFee,
+        string _premium,
+        string _target,
         uint256 _reemittancePeriod
     ) public {
         chamaCount++;
@@ -142,7 +142,7 @@ contract Chama {
             4896000
         );
         //return(chamaCount);
-    }
+    } */
 
     // function to create a Chama
     function createRandomChama(
@@ -155,15 +155,24 @@ contract Chama {
         // For one to be a chama Manager he or she must be willing to pay 3 ether
         require(msg.value >= 3 ether);
         require(
+            chamaManager1 == address(0) ||
             chamaManager2 == address(0) ||
-                chamaManager3 == address(0) ||
-                chamaManager4 == address(0)
+            chamaManager3 == address(0) ||
+            chamaManager4 == address(0)
         );
         // chamaAdd will be the Chama Address which will be equal to ChamaManager's address
         address chamaAdd;
         uint256 date;
         // chamaManager address will be the
         if (
+            chamaManager1 == address(0) ||
+            chamaManager2 == address(0) ||
+            chamaManager3 == address(0) ||
+            chamaManager4 == address(0)
+        ) {
+            chamaManager1 = msg.sender;
+            chamaAdd = chamaManager1;
+        } else if (
             chamaManager2 == address(0) ||
             chamaManager3 == address(0) ||
             chamaManager4 == address(0)
@@ -332,23 +341,26 @@ contract Chama {
                 approvalCount
             )
         );
-        for(uint256 i=0; i<chamas[_chmID].chamaMembers.length; i++){
-            if(_chmID == 1){
-                approversToChama1[membersToApproveCount] = chamas[_chmID].chamaMembers[i];
+        for (uint256 i = 0; i < chamas[_chmID].chamaMembers.length; i++) {
+            if (_chmID == 1) {
+                approversToChama1[membersToApproveCount] = chamas[_chmID]
+                    .chamaMembers[i];
                 membersToApproveCount++;
-            } else if(_chmID == 2){
-                approversToChama2[membersToApproveCount] = chamas[_chmID].chamaMembers[i];
+            } else if (_chmID == 2) {
+                approversToChama2[membersToApproveCount] = chamas[_chmID]
+                    .chamaMembers[i];
                 membersToApproveCount++;
-            } else if(_chmID == 3){
-                approversToChama3[membersToApproveCount] = chamas[_chmID].chamaMembers[i];
+            } else if (_chmID == 3) {
+                approversToChama3[membersToApproveCount] = chamas[_chmID]
+                    .chamaMembers[i];
                 membersToApproveCount++;
-            } else if(_chmID == 4){
-                approversToChama4[membersToApproveCount] = chamas[_chmID].chamaMembers[i];
+            } else if (_chmID == 4) {
+                approversToChama4[membersToApproveCount] = chamas[_chmID]
+                    .chamaMembers[i];
                 membersToApproveCount++;
             } else {
                 revert("Chama with that ID does not exist!");
             }
-           
         }
         emit NewLoanRequest(
             approvalCount,
@@ -374,13 +386,13 @@ contract Chama {
     ) public {
         //uint256 loaneeNumber = requests[_requestID].memberNo;
         //require(members[loaneeNumber].chamaID)
-        if(_chamsId == 1){
+        if (_chamsId == 1) {
             require(approversToChama1[_approverID] == msg.sender);
-        } else if(_chamsId == 2){
+        } else if (_chamsId == 2) {
             require(approversToChama2[_approverID] == msg.sender);
-        } else if(_chamsId == 3){
+        } else if (_chamsId == 3) {
             require(approversToChama3[_approverID] == msg.sender);
-        } else if(_chamsId == 4){
+        } else if (_chamsId == 4) {
             require(approversToChama4[_approverID] == msg.sender);
         }
         // there may be many loan requests someone may argue
@@ -410,14 +422,22 @@ contract Chama {
         address manager = chamas[requests[_requestID].chamaID].chamaManager;
         address loaneeAdd = members[memId].member;
         loanCount++;
-        loans[loanCount] = Loan(loanCount,memId,requests[_requestID].chamaID,loaneeAdd,(manager.balance * 5) /
-                100,timeAwarded,loanDueDate,false);
+        loans[loanCount] = Loan(
+            loanCount,
+            memId,
+            requests[_requestID].chamaID,
+            loaneeAdd,
+            (manager.balance * 5) / 100,
+            timeAwarded,
+            loanDueDate,
+            false
+        );
         members[memId].hasLoaned = true;
         // I want to set the membHasAlreadyApproved mapping with address as its key and value as a boolean field to the default mapping value
         //delete membHasAlreadyApproved;
     }
 
-    function payLoanAwarded(uint _loanId) public payable returns(bool) {
+    function payLoanAwarded(uint256 _loanId) public payable returns (bool) {
         require(!loans[_loanId].hasBeenPaid);
         uint256 dueTime = loans[_loanId].dueDate;
         uint256 blockTime = block.timestamp;
@@ -425,30 +445,30 @@ contract Chama {
         uint256 loanAmt;
         uint256 mbID = loans[_loanId].memberID;
         // If you don't pay within the two months time frame your account is inactivated
-        if(blockTime <= dueTime){
+        if (blockTime <= dueTime) {
             require(msg.value >= loanPayAmt);
             return loans[_loanId].hasBeenPaid = true;
-        } else if(blockTime > dueTime){
-            if(blockTime >= dueTime + 408000){
-                loanAmt = (loanPayAmt*102)/100;
+        } else if (blockTime > dueTime) {
+            if (blockTime >= dueTime + 408000) {
+                loanAmt = (loanPayAmt * 102) / 100;
                 require(msg.value >= loanAmt);
                 return loans[_loanId].hasBeenPaid = true;
-            } else if(blockTime >= dueTime + 816000){
-                loanAmt = (loanPayAmt*104)/100;
+            } else if (blockTime >= dueTime + 816000) {
+                loanAmt = (loanPayAmt * 104) / 100;
                 require(msg.value >= loanAmt);
                 return loans[_loanId].hasBeenPaid = true;
-            }else{
+            } else {
                 members[mbID].isActive = false;
                 return loans[_loanId].hasBeenPaid = false;
             }
         }
-        
     }
+
     // Chama ends at the indicated date, once you join the Chama you can't leave until the end date reaches
     function endChama() public {
         // give one day for dividends to be sent to the last person and then they get dividends then the group is deleted
-        for(uint256 i=1;i<=chamaCount;i++){
-            if(block.timestamp >= chamas[i].endDate + 86400){
+        for (uint256 i = 1; i <= chamaCount; i++) {
+            if (block.timestamp >= chamas[i].endDate + 86400) {
                 delete chamas[i];
             }
         }

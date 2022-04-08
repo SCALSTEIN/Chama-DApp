@@ -11,7 +11,15 @@ import Account from "./components/Account";
 import { Spinner } from "react-bootstrap";
 
 class App extends Component {
-  state = { storageValue: 0, web3: null, accounts: null, contract: null };
+  state = {
+    chamCount: 0,
+    web3: null,
+    accounts: null,
+    contract: null,
+    chms: [],
+    reqCount: 0,
+    loansReq: [],
+  };
 
   componentDidMount = async () => {
     try {
@@ -26,104 +34,98 @@ class App extends Component {
       const deployedNetwork = ChamaContract.networks[networkId];
       const instance = new web3.eth.Contract(
         ChamaContract.abi,
-        deployedNetwork && deployedNetwork.address,
+        deployedNetwork && deployedNetwork.address
       );
 
       // Set web3, accounts, and contract to the state, and then proceed with an
       // example of interacting with the contract's methods.
-      this.setState({ web3, accounts, contract: instance });
+      this.setState({ web3, accounts, contract: instance }, this.runExample);
     } catch (error) {
       // Catch any errors for any of the above operations.
       alert(
-        `Failed to load web3, accounts, or contract. Check console for details.`,
+        `Failed to load web3, accounts, or contract. Check console for details.`
       );
       console.error(error);
     }
   };
 
- 
-
-  /** 
-   *  runExample = async () => {
+  runExample = async () => {
     const { accounts, contract } = this.state;
 
     // Stores a given value, 5 by default.
-    //await contract.methods.set(5).send({ from: accounts[0] });
+    const chamCt = await contract.methods.chamaCount();
+    const chamas = await contract.methods.chamas();
+    const requestCt = await contract.methods.requestCount();
 
-    // Get the value from the contract to prove it worked.
-    //const response = await contract.methods.get().call();
-
-    // Update state with the result.
-    //this.setState({ storageValue: response });
-  };
-   * if (!this.state.web3) {
-      return <div>Loading Web3, accounts, and contract...</div>;
+    let loanReq = [];
+    for (let i = 0; i <= requestCt; i++) {
+      const loansRequest = await contract.methods.requests(i);
+      if (!loansRequest.complete) {
+        loanReq.push({
+          requestId: loansRequest.requestID,
+          desc: loansRequest.Description,
+          amount: loansRequest.Amount,
+          recipientAddress: loansRequest.recipient,
+          chamaId: loansRequest.ChamaID,
+          memberId: loansRequest.MemberNo,
+          approvalCt: loansRequest.approvalCount,
+        });
+      }
     }
-    return (
-      <div className="App">
-        <h1>Good to Go!</h1>
-        <p>Your Truffle Box is installed and ready.</p>
-        <h2>Smart Contract Example</h2>
-        <p>
-          If your contracts compiled and migrated successfully, below will show
-          a stored value of 5 (by default).
-        </p>
-        <p>
-          Try changing the value stored on <strong>line 42</strong> of App.js.
-        </p>
-        <div>The stored value is: {this.state.storageValue}</div>
-      </div>
-    ); */
+    const loansRequested = Object.values(loanReq);
+
+    this.setState({
+      chamCount: chamCt,
+      chms: chamas,
+      reqCount: requestCt,
+      loansReq: loansRequested,
+    });
+  };
 
   render() {
-    return(
+    return (
       <BrowserRouter>
-      <div className="App">
-        <>
-          <Navigation />
-        </>
-        <div>
-          {this.state.web3 ? (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                minHeight: "80vh",
-              }}
-            >
-              <Spinner animation="border" style={{ display: "flex" }} />
-              <p className="mx-3 my-0">Loading Web3, accounts, and contract...</p>
-            </div>
-          ) : (
-            <Routes>
-              <Route
-                path="/"
-                element={<Home />}
-              />
-              <Route
-                path="/create-chama"
-                element={<CreateChama />}
-              />
-              <Route
-                path="/chamas"
-                element={
-                  <AvailableChamas />
-                }
-              />
-              <Route
-                path="/account"
-                element={
-                  <Account />
-                }
-              />
-            </Routes>
-          )}
+        <div className="App">
+          <>
+            <Navigation />
+          </>
+          <div>
+            {this.state.web3 ? (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  minHeight: "80vh",
+                }}
+              >
+                <Spinner animation="border" style={{ display: "flex" }} />
+                <p className="mx-3 my-0">
+                  Loading Web3, accounts, and contract...
+                </p>
+              </div>
+            ) : (
+              <Routes>
+                <Route
+                  path="/"
+                  element={
+                    <Home
+                      count={this.state.chamCount}
+                      availableChamas={this.state.chamas}
+                      loanCnt={this.state.lnCount}
+                      loansGiven={this.state.loansAwarded}
+                    />
+                  }
+                />
+                <Route path="/create-chama" element={<CreateChama />} />
+                <Route path="/chamas" element={<AvailableChamas />} />
+                <Route path="/account" element={<Account />} />
+              </Routes>
+            )}
+          </div>
         </div>
-      </div>
-    </BrowserRouter>
-    )
-   
+      </BrowserRouter>
+    );
   }
 }
 
