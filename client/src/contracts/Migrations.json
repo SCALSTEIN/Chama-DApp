@@ -56,7 +56,7 @@
   "sourceMap": "59:319:0:-;;;211:58;;;;;;;;254:10;246:5;;:18;;;;;;;;;;;;;;;;;;59:319;;;;;;",
   "deployedSourceMap": "59:319:0:-;;;;;;;;;;;;;;;;;;;;;;;;;;;;107:36;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;83:20;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;273:103;;;;;;;;;;;;;;;;;;;;;;;;;;107:36;;;;:::o;83:20::-;;;;;;;;;;;;;:::o;273:103::-;194:5;;;;;;;;;;;180:19;;:10;:19;;;176:26;;;362:9;335:24;:36;;;;176:26;273:103;:::o",
   "source": "// SPDX-License-Identifier: MIT\npragma solidity >=0.4.17;\n\ncontract Migrations {\n  address public owner;\n  uint public last_completed_migration;\n\n  modifier restricted() {\n    if (msg.sender == owner) _;\n  }\n\n  function Migrations() public {\n    owner = msg.sender;\n  }\n\n  function setCompleted(uint completed) public restricted {\n    last_completed_migration = completed;\n  }\n}\n",
-  "sourcePath": "C:\\Users\\ronle\\OneDrive\\Desktop\\Solidity\\CryptoZombies\\cryptozombies-lesson-code\\sample-folder\\contracts\\Migrations.sol",
+  "sourcePath": "/home/pc/ChamaDapp/Chama-DApp/contracts/Migrations.sol",
   "ast": {
     "absolutePath": "project:/contracts/Migrations.sol",
     "exportedSymbols": {
@@ -949,12 +949,12 @@
     "5777": {
       "events": {},
       "links": {},
-      "address": "0xF4CFf07A5911c2A6D36B5fd6f5B813e723D18b58",
-      "transactionHash": "0x3dab77f9782a86694e8b3603d2e5de1140720fd279db83fd9e7a1f84d293f4aa"
+      "address": "0x014C0FF8E157A31cbC5d098B99381dCaBa8E1782",
+      "transactionHash": "0xe282a2ba43cc94f14c21c80a33f3f0b9b18e552446be75186fd45318dd7b63f6"
     }
   },
   "schemaVersion": "3.4.6",
-  "updatedAt": "2022-03-29T13:12:03.965Z",
+  "updatedAt": "2022-04-08T07:16:49.054Z",
   "networkType": "ethereum",
   "devdoc": {
     "methods": {}
