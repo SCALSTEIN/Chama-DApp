@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.4.25;
+pragma solidity ^0.5.16;
 
 /**
  * @title Chama
@@ -26,7 +26,7 @@ contract Chama {
 
     struct Member {
         uint256 memberID;
-        address member;
+        address payable member;
         uint256 chamaID;
         uint256 registrationDate;
         bool isActive;
@@ -65,7 +65,7 @@ contract Chama {
         uint256 requestID;
         string description;
         uint256 amount;
-        address recipient;
+        address payable recipient;
         uint256 chamaID;
         uint256 memberNo;
         bool complete;
@@ -91,7 +91,8 @@ contract Chama {
     mapping(uint256 => address) public approversToChama4;
     //mapping(address => bool) public approvers;
 
-    mapping(uint256 => ChamaDetails) chamas;
+    //mapping(uint256 => ChamaDetails) chamas;
+    ChamaDetails[] public chamas;
 
     event NewLoanRequest(
         uint256 approvCount,
@@ -145,8 +146,9 @@ contract Chama {
     } */
 
     // function to create a Chama
+
     function createRandomChama(
-        string _name,
+        string memory _name,
         uint256 registrationFee,
         uint256 premium,
         uint256 target,
@@ -156,9 +158,9 @@ contract Chama {
         require(msg.value >= 3 ether);
         require(
             chamaManager1 == address(0) ||
-            chamaManager2 == address(0) ||
-            chamaManager3 == address(0) ||
-            chamaManager4 == address(0)
+                chamaManager2 == address(0) ||
+                chamaManager3 == address(0) ||
+                chamaManager4 == address(0)
         );
         // chamaAdd will be the Chama Address which will be equal to ChamaManager's address
         address chamaAdd;
@@ -208,6 +210,7 @@ contract Chama {
             mbrs,
             endingDate
         );
+
         emit NewChama(
             chamaCount,
             _name,
@@ -243,7 +246,7 @@ contract Chama {
         uint256 registrationTime = block.timestamp;
         membersCount++;
         // membersCount will serve as memberID
-        uint256 id = members.push(
+        members.push(
             Member(
                 membersCount,
                 msg.sender,
@@ -254,12 +257,12 @@ contract Chama {
                 false,
                 false
             )
-        ) - 1;
-        membersToChama[id] = chamaAddre;
+        );
+        membersToChama[chamaCt] = chamaAddre;
         //chamaMembersCount[chamaAddre] = chamaMembersCount[chamaAddre].add(1);
         chamaMembersCount[chamaAddre] = membersCount;
         chamas[chamaCt].chamaMembers.push(msg.sender);
-        return (id);
+        return (chamaCt);
     }
 
     /** function listOfChamaDetails(uint256 _chamsID) public view returns(ChamaDetails[]) {
@@ -282,6 +285,7 @@ contract Chama {
         if (memberFundCount > 12) {
             memberFundCount = 0;
         }
+        // send and transfer are only available for objects of type "address payable", not "address"
     }
 
     // function to check subscription status
@@ -320,12 +324,12 @@ contract Chama {
     // decisions as to whether to award loans to members will be based on a consensus made by every chama member
     // function to create a Loan request
     function createLoanRequest(
-        string _description,
+        string memory _description,
         uint256 _amount,
         uint256 _memberNo,
         uint256 _chmID
     ) public {
-        address recipient = msg.sender;
+        address payable recipient = msg.sender;
         uint256 approvalCount;
         bool requestStatus = false;
         loanRequestCount++;
@@ -373,7 +377,7 @@ contract Chama {
     }
 
     // function returns a list of loan requests
-    function listOfLoanRequests() internal view returns (Request[]) {
+    function listOfLoanRequests() internal view returns (Request[] memory) {
         // expect to return the several requests made with the loan requests details
         return (requests);
     }
@@ -436,33 +440,41 @@ contract Chama {
         // I want to set the membHasAlreadyApproved mapping with address as its key and value as a boolean field to the default mapping value
         //delete membHasAlreadyApproved;
     }
+    // Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable
 
-    function payLoanAwarded(uint256 _loanId) public payable returns (bool) {
+    function payLoanAwarded(uint256 _loanId) public payable returns(bool) {
         require(!loans[_loanId].hasBeenPaid);
         uint256 dueTime = loans[_loanId].dueDate;
         uint256 blockTime = block.timestamp;
         uint256 loanPayAmt = loans[_loanId].amount;
         uint256 loanAmt;
         uint256 mbID = loans[_loanId].memberID;
+        bool paid;
         // If you don't pay within the two months time frame your account is inactivated
         if (blockTime <= dueTime) {
             require(msg.value >= loanPayAmt);
-            return loans[_loanId].hasBeenPaid = true;
+            paid = loans[_loanId].hasBeenPaid;
+            paid = true;
         } else if (blockTime > dueTime) {
             if (blockTime >= dueTime + 408000) {
                 loanAmt = (loanPayAmt * 102) / 100;
                 require(msg.value >= loanAmt);
-                return loans[_loanId].hasBeenPaid = true;
+                paid = loans[_loanId].hasBeenPaid;
+                paid = true;
             } else if (blockTime >= dueTime + 816000) {
                 loanAmt = (loanPayAmt * 104) / 100;
                 require(msg.value >= loanAmt);
-                return loans[_loanId].hasBeenPaid = true;
+                paid = loans[_loanId].hasBeenPaid;
+                paid = true;
             } else {
                 members[mbID].isActive = false;
-                return loans[_loanId].hasBeenPaid = false;
+                paid = loans[_loanId].hasBeenPaid;
+                paid = true;
             }
         }
+        return paid;
     }
+    
 
     // Chama ends at the indicated date, once you join the Chama you can't leave until the end date reaches
     function endChama() public {

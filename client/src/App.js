@@ -54,7 +54,7 @@ class App extends Component {
 
     // Stores a given value, 5 by default.
     const chamCt = await contract.methods.chamaCount();
-    const chamas = await contract.methods.chamas();
+    const chamas = await contract.methods.chamas(1);
     const requestCt = await contract.methods.requestCount();
 
     let loanReq = [];
