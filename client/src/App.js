@@ -112,8 +112,8 @@ class App extends Component {
                     <Home
                       count={this.state.chamCount}
                       availableChamas={this.state.chamas}
-                      loanCnt={this.state.lnCount}
-                      loansGiven={this.state.loansAwarded}
+                      requestCnt={this.state.reqCount}
+                      loansReq={this.state.loansReq}
                     />
                   }
                 />
