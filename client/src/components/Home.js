@@ -13,7 +13,7 @@ const Home = (props) => {
   //console.log(loansReq);
   return (
     <div className="flex-justify-center">
-      {props.loansReq.length > 0 ? (
+      {props.requests.length > 0 ? (
         <div className="px-5 container">
           <Row xs={1} md={2} lg={4} className="g-4 py-5">
             {props.loansReq.map((loanReq, idx) => (

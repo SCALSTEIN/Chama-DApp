@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ChamaContract from "./contracts/Chama.json";
 import getWeb3 from "./getWeb3";
@@ -57,32 +57,49 @@ class App extends Component {
     const chamas = await contract.methods.chamas(1);
     const requestCt = await contract.methods.requestCount();
 
-    let loanReq = [];
-    for (let i = 0; i <= requestCt; i++) {
-      const loansRequest = await contract.methods.requests(i);
-      if (!loansRequest.complete) {
-        loanReq.push({
-          requestId: loansRequest.requestID,
-          desc: loansRequest.Description,
-          amount: loansRequest.Amount,
-          recipientAddress: loansRequest.recipient,
-          chamaId: loansRequest.ChamaID,
-          memberId: loansRequest.MemberNo,
-          approvalCt: loansRequest.approvalCount,
-        });
-      }
-    }
-    const loansRequested = Object.values(loanReq);
-
     this.setState({
       chamCount: chamCt,
       chms: chamas,
-      reqCount: requestCt,
-      loansReq: loansRequested,
     });
   };
 
   render() {
+    const fetchLoanRequests = async () => {
+      let loanReq = [];
+      for (let i = 0; i <= this.state.requestCt; i++) {
+        const loansRequest = await this.state.contract.methods.requests(i);
+        if (!loansRequest.complete) {
+          loanReq.push({
+            requestId: loansRequest.requestID,
+            desc: loansRequest.Description,
+            amount: loansRequest.Amount,
+            recipientAddress: loansRequest.recipient,
+            chamaId: loansRequest.ChamaID,
+            memberId: loansRequest.MemberNo,
+            approvalCt: loansRequest.approvalCount,
+          });
+        }
+      }
+      const loansRequested = Object.values(loanReq);
+      this.setState({ loansReq: loansRequested });
+    };
+    
+    
+    const createChama = async (
+      name,
+      regFee,
+      premium,
+      target,
+      _reemittancePeriod
+    ) => {
+      await this.state.contract.methods.createRandomChama(
+        name,
+        regFee,
+        premium,
+        target,
+        _reemittancePeriod
+      ).call();
+    };
     return (
       <BrowserRouter>
         <div className="App">
@@ -106,19 +123,12 @@ class App extends Component {
               </div>
             ) : (
               <Routes>
+                <Route path="/" element={<Home requests={this.state.loansReq} />} />
                 <Route
-                  path="/"
-                  element={
-                    <Home
-                      count={this.state.chamCount}
-                      availableChamas={this.state.chamas}
-                      requestCnt={this.state.reqCount}
-                      loansReq={this.state.loansReq}
-                    />
-                  }
+                  path="/create-chama"
+                  element={<CreateChama onSubmit={createChama} />}
                 />
-                <Route path="/create-chama" element={<CreateChama />} />
-                <Route path="/chamas" element={<AvailableChamas />} />
+                <Route path="/chamas" element={<AvailableChamas allChamas={this.state.chms} />} />
                 <Route path="/account" element={<Account />} />
               </Routes>
             )}
